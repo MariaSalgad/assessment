@@ -1,23 +1,8 @@
-import socket
-import re
-from datetime import datetime
-import mysql.connector
 import json
-
-def databaseConnection():    
-    databaseName = "teste"
-    try:
-        con = mysql.connector.connect(host='localhost',database=databaseName,user='root',password='')
-        if con.is_connected():
-            db_info = con.get_server_info()
-            print("Conectado ao servidor MySQL versão ",db_info)
-            cursor = con.cursor()
-            cursor.execute("select database();")
-            linha = cursor.fetchone()
-            print("Conectado ao banco de dados ",linha)
-            return (con, cursor)
-    except mysql.connector.Error:
-        print("Não foi possível conectar ao banco")
+import socket
+import mysql.connector
+from datetime import datetime
+import re
 
 def startServer():
     localIP     = "127.0.0.1"
@@ -32,20 +17,15 @@ def startServer():
     while(True):
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = format(bytesAddressPair[0])
+        jsonData = createJsonUsing(message)
+        saveData(jsonData)
 
         clientMsg = format(message)
         print(clientMsg[1:])
         address = bytesAddressPair[1]
-        msgFromServer = "Mensagem recebida."
+        msgFromServer = "Cadastro realizado com sucesso"
         bytesToSend   = str.encode(msgFromServer)
         UDPServerSocket.sendto(bytesToSend, address)
-
-def splitMessageInListAndIdNumber(message):
-    lista = message.split(';')
-    lista2 = lista[0].split(',')
-    idNumber = lista[1]
-    id = idNumber[3:6]
-    return(lista2,id)
 
 def createJsonUsing(message):
     (objectList, idNumber) = splitMessageInListAndIdNumber(message)
@@ -67,6 +47,13 @@ def saveJsonFile(data):
         json_file.write(jsonData)
 
 
+def splitMessageInListAndIdNumber(message):
+    lista = message.split(';')
+    lista2 = lista[0].split(',')
+    idNumber = lista[1]
+    id = idNumber[3:6]
+    return(lista2,id)
+
 def createTypeUsing(lista: list):
     type = lista[0]
     type = re.sub('[^0-9]', '', type)
@@ -84,6 +71,20 @@ def createStringTimeUsing(time):
 def createStatusUsing(lista: list):
     return lista[3]
 
+def databaseConnection():    
+    try:
+        con = mysql.connector.connect(host='localhost',database='teste',user='root',password='')
+        if con.is_connected():
+            db_info = con.get_server_info()
+            print("Conectado ao servidor MySQL versão ",db_info)
+            cursor = con.cursor()
+            cursor.execute("select database();")
+            linha = cursor.fetchone()
+            print("Conectado ao banco de dados ",linha)
+            return (con, cursor)
+    except mysql.connector.Error:
+        print("Não foi possível conectar ao banco")
+        
 def createTable():
     
     (connection, cursor) = databaseConnection()
@@ -95,3 +96,17 @@ def createTable():
     except:
         connection.close()
 
+def saveData(jsonData):
+    createTable()
+    query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
+    values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
+    try:
+        print(jsonData)
+        (connection, cursor) = databaseConnection()
+        cursor.execute(query, values)
+        connection.commit()
+        cursor.close()
+    except mysql.connector.Error:
+        print("Não foi possível conectar ao banco")
+
+startServer()
