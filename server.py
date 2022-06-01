@@ -15,7 +15,7 @@ def startServer():
 
     UDPServerSocket.bind((localIP, localPort))
 
-    print("UDP server up and listening")
+    print("Servidor UDP iniciado com sucesso")
     while(True):
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = format(bytesAddressPair[0])
@@ -79,7 +79,6 @@ def databaseConnection():
         con = mysql.connector.connect(host='localhost',database='teste',user='root',password='')
         if con.is_connected():
             db_info = con.get_server_info()
-            print("Conectado ao servidor MySQL versão ",db_info)
             cursor = con.cursor()
             cursor.execute("select database();")
             linha = cursor.fetchone()
