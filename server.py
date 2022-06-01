@@ -2,6 +2,7 @@ import socket
 import re
 from datetime import datetime
 import mysql.connector
+import json
 
 def databaseConnection():    
     databaseName = "teste"
@@ -46,6 +47,26 @@ def splitMessageInListAndIdNumber(message):
     id = idNumber[3:6]
     return(lista2,id)
 
+def createJsonUsing(message):
+    (objectList, idNumber) = splitMessageInListAndIdNumber(message)
+    time_date = createTimeUsing(objectList)
+
+    data = {'type': createTypeUsing(objectList),
+    'protocolo': createProtocoloUsing(objectList),
+    'utc': createStringTimeUsing(time_date),
+    'status': createStatusUsing(objectList),
+    'id': idNumber}
+
+    saveJsonFile(data)
+    return data
+
+def saveJsonFile(data):
+    jsonData = json.dumps(data)
+    
+    with open('dados.json', 'w') as json_file:
+        json_file.write(jsonData)
+
+
 def createTypeUsing(lista: list):
     type = lista[0]
     type = re.sub('[^0-9]', '', type)
@@ -62,3 +83,15 @@ def createStringTimeUsing(time):
 
 def createStatusUsing(lista: list):
     return lista[3]
+
+def createTable():
+    
+    (connection, cursor) = databaseConnection()
+    try:
+        cursor.execute('''CREATE TABLE IF NOT EXISTS dev_status 
+                (type INT, protocolo INT, utc DATETIME, status INT, id VARCHAR(255))''')
+        connection.commit()
+        connection.close()
+    except:
+        connection.close()
+
