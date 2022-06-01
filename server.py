@@ -46,8 +46,8 @@ def createJsonUsing(message):
 def saveJsonFile(data):
     jsonData = json.dumps(data)
     
-    with open('dados.json', 'w') as json_file:
-        json_file.write(jsonData)
+    with open('dados.json', 'a') as json_file:
+        json_file.write(jsonData+",\n")
 
 
 def splitMessageInListAndIdNumber(message):
@@ -99,46 +99,17 @@ def createTable():
     except:
         connection.close()
 
-def validateType(type):
-    return type == '1' or type == '2'
-
-def validateProtocolo(protocolo):
-    try:
-        number = int(protocolo)
-        return number >= 66 and number <= 68
-    except: 
-        return False
-
-def validateUtc(utc):
-    try:
-        return bool(datetime.strptime(utc, '%y%m%d%H%M%S'))
-    except:
-        return False
-
-def validateStatus(status):
-    return status =='0' or status == '1'
-
-def validateId(id):
-    return len(id == 3)
-
-def validateRules(json):
-    return validateType(json["type"]) and validateProtocolo(json["protocolo"]) and validateUtc(json["utc"]) and validateStatus(json["status"]) and validateId(json["id"])
-
 def saveData(jsonData):
     createTable()
-    if validateRules(jsonData):
-        query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
-        values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
-        try:
-            print(jsonData)
-            (connection, cursor) = databaseConnection()
-            cursor.execute(query, values)
-            connection.commit()
-            cursor.close()
-            return "Dados salvos com sucesso"
-        except mysql.connector.Error:
-            print("Não foi possível conectar ao banco")
-    else:
-        return "Dados invalidos"
-
+    query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
+    values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
+    try:
+        print(jsonData)
+        (connection, cursor) = databaseConnection()
+        cursor.execute(query, values)
+        connection.commit()
+        cursor.close()
+        return "Dados salvos com sucesso"
+    except mysql.connector.Error:
+            return "Não foi possível conectar ao banco de dados"
 startServer()
