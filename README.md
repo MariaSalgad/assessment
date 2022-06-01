@@ -1,6 +1,6 @@
 # COMO RODAR O PROJETO
 
-Para fazer o projeto rodar, é necessário que se possua um banco MySQL instalado na máquina, caso não possua, pode ser baixado (aqui)[https://www.apachefriends.org/download.html]
+Para fazer o projeto rodar, é necessário que se possua um banco MySQL instalado na máquina, caso não possua, pode ser baixado [aqui](https://www.apachefriends.org/download.html)
 
 Feito isso, deve-se criar um banco com o nome de "teste" ou editar no servidor.py o nome do banco de dados.
 
