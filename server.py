@@ -20,3 +20,10 @@ def startServer():
         msgFromServer = "Mensagem recebida."
         bytesToSend   = str.encode(msgFromServer)
         UDPServerSocket.sendto(bytesToSend, address)
+
+def splitMessageInListAndIdNumber(message):
+    lista = message.split(';')
+    lista2 = lista[0].split(',')
+    idNumber = lista[1]
+    id = idNumber[3:6]
+    return(lista2,id)
