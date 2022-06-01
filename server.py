@@ -4,6 +4,8 @@ import mysql.connector
 from datetime import datetime
 import re
 
+from numpy import save
+
 def startServer():
     localIP     = "127.0.0.1"
     localPort   = 20001
@@ -18,13 +20,14 @@ def startServer():
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = format(bytesAddressPair[0])
         jsonData = createJsonUsing(message)
-        saveData(jsonData)
-
+        
+        msgFromServer = saveData(jsonData)
+        
         clientMsg = format(message)
         print(clientMsg[1:])
         address = bytesAddressPair[1]
-        msgFromServer = "Cadastro realizado com sucesso"
-        bytesToSend   = str.encode(msgFromServer)
+    
+        bytesToSend = str.encode(msgFromServer)
         UDPServerSocket.sendto(bytesToSend, address)
 
 def createJsonUsing(message):
@@ -96,17 +99,46 @@ def createTable():
     except:
         connection.close()
 
+def validateType(type):
+    return type == '1' or type == '2'
+
+def validateProtocolo(protocolo):
+    try:
+        number = int(protocolo)
+        return number >= 66 and number <= 68
+    except: 
+        return False
+
+def validateUtc(utc):
+    try:
+        return bool(datetime.strptime(utc, '%y%m%d%H%M%S'))
+    except:
+        return False
+
+def validateStatus(status):
+    return status =='0' or status == '1'
+
+def validateId(id):
+    return len(id == 3)
+
+def validateRules(json):
+    return validateType(json["type"]) and validateProtocolo(json["protocolo"]) and validateUtc(json["utc"]) and validateStatus(json["status"]) and validateId(json["id"])
+
 def saveData(jsonData):
     createTable()
-    query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
-    values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
-    try:
-        print(jsonData)
-        (connection, cursor) = databaseConnection()
-        cursor.execute(query, values)
-        connection.commit()
-        cursor.close()
-    except mysql.connector.Error:
-        print("Não foi possível conectar ao banco")
+    if validateRules(jsonData):
+        query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
+        values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
+        try:
+            print(jsonData)
+            (connection, cursor) = databaseConnection()
+            cursor.execute(query, values)
+            connection.commit()
+            cursor.close()
+            return "Dados salvos com sucesso"
+        except mysql.connector.Error:
+            print("Não foi possível conectar ao banco")
+    else:
+        return "Dados invalidos"
 
 startServer()
