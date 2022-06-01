@@ -4,27 +4,23 @@ import mysql.connector
 from datetime import datetime
 import re
 
-from numpy import save
-
 def startServer():
     localIP     = "127.0.0.1"
     localPort   = 20001
     bufferSize  = 1024
 
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
     UDPServerSocket.bind((localIP, localPort))
 
     print("Servidor UDP iniciado com sucesso")
+    
     while(True):
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = format(bytesAddressPair[0])
         jsonData = createJsonUsing(message)
         
-        msgFromServer = saveData(jsonData)
+        msgFromServer = saveDataToDatabase(jsonData)
         
-        clientMsg = format(message)
-        print(clientMsg[1:])
         address = bytesAddressPair[1]
     
         bytesToSend = str.encode(msgFromServer)
@@ -32,11 +28,11 @@ def startServer():
 
 def createJsonUsing(message):
     (objectList, idNumber) = splitMessageInListAndIdNumber(message)
-    time_date = createTimeUsing(objectList)
+    timeDate = createTimeUsing(objectList)
 
     data = {'type': createTypeUsing(objectList),
     'protocolo': createProtocoloUsing(objectList),
-    'utc': createStringTimeUsing(time_date),
+    'utc': createStringTimeUsing(timeDate),
     'status': createStatusUsing(objectList),
     'id': idNumber}
 
@@ -87,9 +83,9 @@ def databaseConnection():
     except mysql.connector.Error:
         print("Não foi possível conectar ao banco")
         
-def createTable():
-    
+def createDatabaseTable():
     (connection, cursor) = databaseConnection()
+
     try:
         cursor.execute('''CREATE TABLE IF NOT EXISTS dev_status 
                 (type INT, protocolo INT, utc DATETIME, status INT, id VARCHAR(255))''')
@@ -98,17 +94,19 @@ def createTable():
     except:
         connection.close()
 
-def saveData(jsonData):
-    createTable()
+def saveDataToDatabase(jsonData):
+    createDatabaseTable()
+    
     query = ("INSERT INTO dev_status(type, protocolo, utc, status, id) VALUES(%s,%s,%s,%s,%s)")
     values = (jsonData["type"], jsonData["protocolo"], jsonData["utc"], jsonData["status"], jsonData["id"])
+    
     try:
-        print(jsonData)
         (connection, cursor) = databaseConnection()
         cursor.execute(query, values)
         connection.commit()
         cursor.close()
         return "Dados salvos com sucesso"
     except mysql.connector.Error:
-            return "Não foi possível conectar ao banco de dados"
+        return "Não foi possível conectar ao banco de dados"
+            
 startServer()
