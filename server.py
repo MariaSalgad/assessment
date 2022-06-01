@@ -1,6 +1,22 @@
 import socket
 import re
 from datetime import datetime
+import mysql.connector
+
+def databaseConnection():    
+    databaseName = "teste"
+    try:
+        con = mysql.connector.connect(host='localhost',database=databaseName,user='root',password='')
+        if con.is_connected():
+            db_info = con.get_server_info()
+            print("Conectado ao servidor MySQL versão ",db_info)
+            cursor = con.cursor()
+            cursor.execute("select database();")
+            linha = cursor.fetchone()
+            print("Conectado ao banco de dados ",linha)
+            return (con, cursor)
+    except mysql.connector.Error:
+        print("Não foi possível conectar ao banco")
 
 def startServer():
     localIP     = "127.0.0.1"
