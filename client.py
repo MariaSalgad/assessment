@@ -5,8 +5,6 @@ from datetime import datetime
 import time
 import _thread
 
-keyPressed = None
-
 def sendMessageToServer(message):
     bytesToSend = str.encode(message)
 
@@ -18,8 +16,8 @@ def sendMessageToServer(message):
 
     msgFromServer = UDPClientSocket.recvfrom(bufferSize)
 
-    msg = format(msgFromServer[0])[1:]
-    print (msg)
+    message = format(msgFromServer[0])[1:]
+    print (message)
 
 def createType():
     return random.randint(1,2)
@@ -28,8 +26,8 @@ def createProtocolo():
     return random.randint(66,68)
 
 def createUtc():
-    dateTimeAtual = datetime.now()
-    utc = dateTimeAtual.strftime('%y%m%d%H%M%S')
+    actualDateTime = datetime.now()
+    utc = actualDateTime.strftime('%y%m%d%H%M%S')
     return utc
 
 def createStatus():
@@ -39,22 +37,24 @@ def createId():
     return ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(3))
 
 def createMessage():
-    result = '>DATA' + str(createType()) + ',' + str(createProtocolo()) + ',' + createUtc() + ',' +str(createStatus()) + ';ID=' + createId() + "<"
-    return result
+    message = '>DATA' + str(createType()) + ',' + str(createProtocolo()) + ',' + createUtc() + ',' +str(createStatus()) + ';ID=' + createId() + "<"
+    return message
 
-def input_thread(a_list):
+def inputThread(cmdList):
     input()
     print("Fim do serviço")
-    a_list.append(True)
+    cmdList.append(True)
     
 def startTimeMessage():
-    a_list = []
-    _thread.start_new_thread(input_thread, (a_list,))
+    cmdList = []
+    _thread.start_new_thread(inputThread, (cmdList,))
+    
     print("Inicio do serviço")
     print("\n####################")
     print("\nPressione Enter para finalizar a execução")
     print("\n####################\n")
-    while not a_list:
+
+    while not cmdList:
         sendMessageToServer(createMessage())
         time.sleep(1)
     
