@@ -39,7 +39,7 @@ def createId():
     return ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(3))
 
 def createMessage():
-    result = 'DATA' + str(createType()) + ',' + str(createProtocolo()) + ',' + createUtc() + ',' +str(createStatus()) + ';ID=' + createId()
+    result = '>DATA' + str(createType()) + ',' + str(createProtocolo()) + ',' + createUtc() + ',' +str(createStatus()) + ';ID=' + createId() + "<"
     return result
 
 def input_thread(a_list):
